@@ -6,12 +6,16 @@ import (
 	"fmt"
 	"encoding/json"
 	"errors"
+	"sync"
 );
 
 var fileDict map[string]common.FileDownloadData;
+var fdMutex sync.Mutex;
 
 func sendDownloadData(fileID string, conn net.Conn) error {
+	fdMutex.Lock()
 	res, ok := fileDict[fileID]
+	fdMutex.Unlock()
 	if (!ok) {
 		conn.Write([]byte("{\"error\": \"Unknown file ID\"}"))
 		return errors.New("Unknown file ID")
@@ -87,10 +91,9 @@ func main() {
 		Peers:[]common.Peer{
 			{IP: "127.0.0.1", Port: 8081},
 		}};
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%v", common.SERVER_PORT));
-	//defer listener.Close()
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%v", common.TRACKER_TCP_PORT));
 	if (err != nil) {
-		fmt.Printf("Error while listening on port %d: %s", common.SERVER_PORT, err);
+		fmt.Printf("Error while listening on port %d: %s", common.TRACKER_TCP_PORT, err);
 		return;
 	}
 
