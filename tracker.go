@@ -89,7 +89,7 @@ func main() {
 		FileID: "testfileid", 
 		FileName:"testfilename", 
 		Peers:[]common.Peer{
-			{IP: "127.0.0.1", Port: 8081},
+			{IP: "127.0.0.1", Port: common.PEER_QUIC_PORT},
 		}};
 		listener, err := net.Listen("tcp", fmt.Sprintf(":%v", common.TRACKER_TCP_PORT));
 	if (err != nil) {
