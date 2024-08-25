@@ -85,9 +85,9 @@ func trackerHandler(conn net.Conn) {
 func main() {
 	// code to accept new files
 	fileDict = make(map[string]common.FileDownloadData);
-	fileDict["testfileid"] = common.FileDownloadData{
-		FileID: "testfileid", 
-		FileName:"testfilename", 
+	fileDict["somefileid"] = common.FileDownloadData{
+		FileID: "somefileid", 
+		FileName:"somefilename", 
 		Peers:[]common.Peer{
 			{IP: "127.0.0.1", Port: common.PEER_QUIC_PORT},
 		}};
