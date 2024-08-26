@@ -12,6 +12,8 @@ import (
 var fileDict map[string]common.FileDownloadData;
 var fdMutex sync.Mutex;
 
+var aliveDict sync.Map
+
 func sendDownloadData(fileID string, conn net.Conn) error {
 	fdMutex.Lock()
 	res, ok := fileDict[fileID]
@@ -20,6 +22,7 @@ func sendDownloadData(fileID string, conn net.Conn) error {
 		conn.Write([]byte("{\"error\": \"Unknown file ID\"}"))
 		return errors.New("Unknown file ID")
 	}
+	fmt.Println()
 	buf, err := json.Marshal(res)
 	if err != nil {
 		return err
@@ -43,7 +46,9 @@ func trackerHandler(conn net.Conn) {
 	for true {
 		n, err = conn.Read(buf)
 		if (err != nil) {
-			fmt.Println("Error while reading from addr ", otherAddr, ": ", err);
+			if err.Error() != "EOF" {
+				fmt.Println("Error while reading from addr ", otherAddr, ": ", err);
+			}
 			return;
 		}
 		if (n == 0) {
@@ -88,14 +93,17 @@ func main() {
 	fileDict["somefileid"] = common.FileDownloadData{
 		FileID: "somefileid", 
 		FileName:"somefilename", 
-		Peers:[]common.Peer{
-			{IP: "127.0.0.1", Port: common.PEER_QUIC_PORT},
-		}};
+		Peers:[]common.Peer{},
+	};
+			//{IP: "127.0.0.1", Port: common.PEER_QUIC_PORT},
+//		}};
 		listener, err := net.Listen("tcp", fmt.Sprintf(":%v", common.TRACKER_TCP_PORT));
 	if (err != nil) {
 		fmt.Printf("Error while listening on port %d: %s", common.TRACKER_TCP_PORT, err);
 		return;
 	}
+
+	go aliveHandler()
 
 	for (true) {
 		conn, err := listener.Accept()
