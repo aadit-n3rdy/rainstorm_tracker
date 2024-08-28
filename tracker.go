@@ -2,7 +2,7 @@ package main
 
 import (
 	"net"
-	"rainstorm/common"
+	"github.com/aadit-n3rdy/rainstorm/common"
 	"fmt"
 	"encoding/json"
 	"errors"
