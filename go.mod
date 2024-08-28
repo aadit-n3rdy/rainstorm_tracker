@@ -1,4 +1,4 @@
-module rainstorm/tracker
+module github.com/aadit-n3rdy/rainstorm/tracker
 
 go 1.22.5
 
