@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"github.com/aadit-n3rdy/rainstorm/common"
+	common "github.com/aadit-n3rdy/rainstorm_common"
 	"time"
 )
 
