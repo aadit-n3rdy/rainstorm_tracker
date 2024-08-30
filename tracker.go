@@ -94,10 +94,9 @@ func main() {
 		FileID: "somefileid", 
 		FileName:"somefilename", 
 		Peers:[]common.Peer{},
+		ChunkCount: 99,
 	};
-			//{IP: "127.0.0.1", Port: common.PEER_QUIC_PORT},
-//		}};
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%v", common.TRACKER_TCP_PORT));
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", common.TRACKER_TCP_PORT));
 	if (err != nil) {
 		fmt.Printf("Error while listening on port %d: %s", common.TRACKER_TCP_PORT, err);
 		return;
