@@ -35,6 +35,14 @@ func sendDownloadData(fileID string, conn net.Conn) error {
 	}
 }
 
+func registerFileDownloadData(fdd *common.FileDownloadData) error {
+	fdMutex.Lock()
+	fileDict[fdd.FileID] = *fdd
+	fdMutex.Unlock()
+
+	return nil
+}
+
 func trackerHandler(conn net.Conn) {
 	defer conn.Close();
 	buf := make([]byte, 1024)
@@ -80,6 +88,19 @@ func trackerHandler(conn net.Conn) {
 				return
 			}
 			err = sendDownloadData(file_id, conn)
+		case "file_register":
+			fdd_dict, ok := msg["file_download_data"].(map[string]interface{})
+			if !ok {
+				fmt.Println("Missing file_download_data")
+				return
+			}
+			fdd_json, err := json.Marshal(fdd_dict)
+			var fdd common.FileDownloadData
+			err = json.Unmarshal(fdd_json, &fdd)
+			if err != nil {
+				fmt.Println("Error converting JSON back to obj")
+			}
+			registerFileDownloadData(&fdd)
 		default:
 			fmt.Println("Unexpected msg type ", msg["type"]);
 			return
@@ -90,12 +111,6 @@ func trackerHandler(conn net.Conn) {
 func main() {
 	// code to accept new files
 	fileDict = make(map[string]common.FileDownloadData);
-	fileDict["somefileid"] = common.FileDownloadData{
-		FileID: "somefileid", 
-		FileName:"somefilename", 
-		Peers:[]common.Peer{},
-		ChunkCount: 99,
-	};
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", common.TRACKER_TCP_PORT));
 	if (err != nil) {
 		fmt.Printf("Error while listening on port %d: %s", common.TRACKER_TCP_PORT, err);
