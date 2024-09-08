@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"sync"
+	"bufio"
 );
 
 var fileDict map[string]common.FileDownloadData;
@@ -16,26 +17,46 @@ var aliveDict sync.Map
 
 func sendDownloadData(fileID string, conn net.Conn) error {
 	fdMutex.Lock()
-	res, ok := fileDict[fileID]
+	fdd, ok := fileDict[fileID]
 	fdMutex.Unlock()
+	smallfdd := fdd
+	smallfdd.Checksums = []string{}
 	if (!ok) {
 		conn.Write([]byte("{\"error\": \"Unknown file ID\"}"))
 		return errors.New("Unknown file ID")
 	}
 	fmt.Println()
-	buf, err := json.Marshal(res)
+	buf, err := json.Marshal(smallfdd)
 	if err != nil {
 		return err
 	}
 	n, err := conn.Write(buf)
-	if n == 0 {
-		return errors.New("0 bytes sent")
-	} else  {
-		return err
+	if n == 0 || err != nil {
+		return errors.New("0 bytes sent or " + err.Error())
+	} 
+
+	conn.Read(buf)
+	for i := 0; i < fdd.ChunkCount; i += 1 {
+		conn.Write([]byte(fmt.Sprintf("%v\n", fdd.Checksums[i])))
 	}
+	return nil
 }
 
-func registerFileDownloadData(fdd *common.FileDownloadData) error {
+func registerFileDownloadData(fdd *common.FileDownloadData, conn net.Conn) error {
+	fmt.Println("Registering")
+	conn.Write([]byte("OK\n"))
+	n_chunks := fdd.ChunkCount
+	fdd.Checksums = make([]string, n_chunks)
+
+	br := bufio.NewReader(conn)
+
+	for i := 0; i < n_chunks; i+=1 {
+		fdd.Checksums[i], _ = br.ReadString('\n')
+		fdd.Checksums[i] = fdd.Checksums[i][:len(fdd.Checksums[i])-1]
+	}
+
+	fmt.Println(fdd.Checksums)
+
 	fdMutex.Lock()
 	fileDict[fdd.FileID] = *fdd
 	fdMutex.Unlock()
@@ -100,7 +121,7 @@ func trackerHandler(conn net.Conn) {
 			if err != nil {
 				fmt.Println("Error converting JSON back to obj")
 			}
-			registerFileDownloadData(&fdd)
+			registerFileDownloadData(&fdd, conn)
 		default:
 			fmt.Println("Unexpected msg type ", msg["type"]);
 			return
