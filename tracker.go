@@ -55,8 +55,6 @@ func registerFileDownloadData(fdd *common.FileDownloadData, conn net.Conn) error
 		fdd.Checksums[i] = fdd.Checksums[i][:len(fdd.Checksums[i])-1]
 	}
 
-	fmt.Println(fdd.Checksums)
-
 	fdMutex.Lock()
 	fileDict[fdd.FileID] = *fdd
 	fdMutex.Unlock()
